@@ -1,0 +1,7 @@
+app:
+    resource: "@AppBundle/Controller/"
+    type:     annotation
+
+users:
+    type:     rest
+    resource: AppBundle\Controller\UsersController
