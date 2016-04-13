@@ -95,7 +95,7 @@ fos_rest:
             jpg: 'image/jpeg'
             png: 'image/png'
     body_listener: true
-    param_fetcher_listener: force
+    param_fetcher_listener: true
     allowed_methods_listener: true
     format_listener:
         rules:

@@ -2,29 +2,56 @@
 
 namespace AppBundle\Controller;
 
-use FOS\RestBundle\Controller\FOSRestController as Controller;
+use AppBundle\Entity\User;
+use AppBundle\Form\UserType;
+use Symfony\Component\HttpFoundation\Request;
+use FOS\RestBundle\Controller\FOSRestController;
+use FOS\RestBundle\Routing\ClassResourceInterface;
 
-
-class UsersController extends Controller
+class UsersController extends FOSRestController implements ClassResourceInterface
 {
-    public function getUsersAction()
+    public function cgetAction()
     {
-        $data = [
-            'user1' => [
-                'username' => 'username1',
-                'email' => 'test1@email.com'
-            ],
-            'user2' => [
-                'username' => 'username2',
-                'email' => 'test2@email.com'
-            ]
-        ];
+        $em = $this->getDoctrine()->getEntityManager();
+        $repository = $em->getRepository("AppBundle:User");
+        $users = $repository->findAll();
 
-        $view = $this->view($data, 200)
+        $view = $this->view($users, 200)
             ->setTemplate("default/users.html.twig")
             ->setTemplateVar('users')
         ;
 
+
         return $this->handleView($view);
+    }
+
+    public function postAction(Request $request){
+        $user = new User();
+        $form = $this->createForm(UserType::class, $user);
+
+        //\Doctrine\Common\Util\Debug::dump($request->getContent());
+
+        $form->handleRequest($request);
+
+        if ($form->isValid()) {
+
+            // 3) Encode the password (you could also do this via Doctrine listener)
+            $password = $this->get('security.password_encoder')
+                ->encodePassword($user, $user->getPlainPassword());
+            $user->setPassword($password);
+
+            // 4) save the User!
+            $em = $this->getDoctrine()->getManager();
+            $em->persist($user);
+            $em->flush();
+
+            // ... do any other work - like sending them an email, etc
+            // maybe set a "flash" success message for the user
+
+            $view = $this->view($user, 200);
+            return $this->handleView($view);
+        }
+
+        return $form->getErrors();
     }
 }
