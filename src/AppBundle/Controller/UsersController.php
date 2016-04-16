@@ -7,11 +7,19 @@ use AppBundle\Form\UserType;
 use Symfony\Component\HttpFoundation\Request;
 use FOS\RestBundle\Controller\FOSRestController;
 use FOS\RestBundle\Routing\ClassResourceInterface;
+use Symfony\Component\HttpFoundation\File\Exception\AccessDeniedException;
 
 class UsersController extends FOSRestController implements ClassResourceInterface
 {
     public function cgetAction()
     {
+        //security.yml is configured to allow anonymous access to controllers
+        //checking for authorization in each controller allows more flexibility
+        //to change this remove anonymous: true in security.yml on firewall
+        if (!$this->get('security.authorization_checker')->isGranted('IS_AUTHENTICATED_FULLY')) {
+            throw $this->createAccessDeniedException();
+        }
+
         $em = $this->getDoctrine()->getEntityManager();
         $repository = $em->getRepository("AppBundle:User");
         $users = $repository->findAll();
@@ -26,32 +34,25 @@ class UsersController extends FOSRestController implements ClassResourceInterfac
     }
 
     public function postAction(Request $request){
-        $user = new User();
+
+        $userManager = $this->get('fos_user.user_manager');
+
+        $user = $userManager->createUser();
+        $user->setEnabled(true);
+
         $form = $this->createForm(UserType::class, $user);
-
-        //\Doctrine\Common\Util\Debug::dump($request->getContent());
-
         $form->handleRequest($request);
 
         if ($form->isValid()) {
 
-            // 3) Encode the password (you could also do this via Doctrine listener)
-            $password = $this->get('security.password_encoder')
-                ->encodePassword($user, $user->getPlainPassword());
-            $user->setPassword($password);
-
-            // 4) save the User!
-            $em = $this->getDoctrine()->getManager();
-            $em->persist($user);
-            $em->flush();
-
-            // ... do any other work - like sending them an email, etc
-            // maybe set a "flash" success message for the user
+            $user->setPlainPassword($user->getPassword());
+            $userManager->updateUser($user);
 
             $view = $this->view($user, 200);
             return $this->handleView($view);
         }
 
-        return $form->getErrors();
+        $view = $this->view($form->getErrors(), 409);
+        return $this->handleView($view);
     }
 }
