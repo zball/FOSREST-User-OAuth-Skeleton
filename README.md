@@ -9,7 +9,7 @@ Installation:
 git clone <RepoURL> <ProjectName>
 composer install
 php bin/console doctrine:database:create
-php bin/console doctrine:Schema:update --force
+php bin/console doctrine:schema:update --force
 ```
 
 Create An OAuth Client
@@ -27,7 +27,7 @@ curl -X POST -H "Content-Type: application/json" -H "Accept: application/json" -
 ```
 
 ### Get User Access & Refresh Tokens
-Browse to the following URL while Rrplacing **CLIENTID**, **CLIENTSECRET**, **USERNAME**, & **PASSWORD** with your values:
+Browse to the following URL while Replacing **CLIENTID**, **CLIENTSECRET**, **USERNAME**, & **PASSWORD** with your values:
 
 ```
 http://127.0.0.1:8000/app_dev.php/oauth/v2/token?client_id=__CLIENTID__&client_secret=__CLIENTSECRET__&grant_type=password&username=USERNAME&password=PASSWORD 
